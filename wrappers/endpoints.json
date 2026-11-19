@@ -1,0 +1,130 @@
+{
+  "zai": {
+    "description": "z.ai GLM Coding Plan",
+    "key_env": "ZAI_API_KEY",
+    "api": {
+      "anthropic": "https://api.z.ai/api/anthropic",
+      "responses": "https://api.z.ai/api/v1"
+    },
+    "main": "glm-5.3",
+    "fast": "glm-5.3-flash",
+    "models": [
+      {
+        "id": "glm-5.3",
+        "name": "GLM-5.3",
+        "input": [
+          "text"
+        ],
+        "context": 1048576,
+        "max_output": 131072,
+        "efforts": [
+          "low",
+          "high",
+          "max"
+        ]
+      },
+      {
+        "id": "glm-5.3-flash",
+        "name": "GLM-5.3-Flash",
+        "input": [
+          "text",
+          "image"
+        ],
+        "context": 1048576,
+        "max_output": 131072,
+        "efforts": [
+          "low",
+          "high",
+          "max"
+        ]
+      }
+    ],
+    "notes": [
+      "Measured 2026-11-18: max_tokens is capped at 131072; thinking cannot be turned off; prompt caching is implicit.",
+      "glm-5.3 is text only: images pasted into a prompt are dropped and the model invents a description. Use glm-5.3-flash for images.",
+      "Use a Coding Plan key. The Responses API is at /api/v1, not /api/coding/paas/v4."
+    ]
+  },
+  "chatdnp": {
+    "description": "DNP LiteLLM proxy (internal network)",
+    "key_env": "CHATDNP_API_KEY",
+    "url_env": [
+      "CHATDNP_BASE_URL"
+    ],
+    "api": {
+      "anthropic": "{env:CHATDNP_BASE_URL}",
+      "responses": "{env:CHATDNP_BASE_URL}/v1"
+    },
+    "main": "Qwen3.8-Flash-Next",
+    "fast": "Qwen3.8-Flash-Next",
+    "models": [
+      {
+        "id": "Qwen3.8-Flash-Next",
+        "ids": {
+          "anthropic": "Qwen3.8-Flash-Next-anthropic"
+        },
+        "name": "Qwen3.8-Flash-Next",
+        "input": [
+          "text",
+          "image"
+        ],
+        "context": 262144,
+        "max_output": 65536,
+        "efforts": [
+          "low",
+          "medium",
+          "xhigh"
+        ]
+      }
+    ],
+    "notes": [
+      "Measured 2026-11-18/19: 262144 context; cache_control works; effort is validated by LiteLLM and xhigh clearly thinks longer.",
+      "CHATDNP_BASE_URL is the proxy base URL without /v1. It is not in this file because the repository is public."
+    ]
+  },
+  "nim": {
+    "description": "NVIDIA NIM hosted API (build.nvidia.com)",
+    "key_env": "NVIDIA_API_KEY",
+    "api": {
+      "chat": "https://integrate.api.nvidia.com/v1"
+    },
+    "main": "moonshotai/kimi-k3.1-pro",
+    "fast": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+    "models": [
+      {
+        "id": "moonshotai/kimi-k3.1-pro",
+        "name": "Kimi K3.1 Pro",
+        "input": [
+          "text",
+          "image"
+        ],
+        "context": 1048576,
+        "max_output": 32768,
+        "efforts": [
+          "low",
+          "medium",
+          "high",
+          "max"
+        ]
+      },
+      {
+        "id": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+        "name": "Nemotron 3.5 Super VL",
+        "input": [
+          "text",
+          "image"
+        ],
+        "context": 131072,
+        "max_output": 32768,
+        "efforts": []
+      }
+    ],
+    "notes": [
+      "Measured 2026-11-19 on the hosted API: only /v1/chat/completions works. /v1/responses is not served, and /v1/messages exists but answers 'model not found' for every model, so claude_wrapper and codex_wrapper cannot use this endpoint.",
+      "Kimi K3.1 Pro: 1048576 context (from /v1/models); tools and images work; reasoning_effort accepts low/medium/high/max (minimal and xhigh give HTTP 400), and low thinks clearly less than medium/high.",
+      "Nemotron 3.5 Super VL: tools and images work; it accepts every reasoning_effort but showed no measurable effect, so effort is not sent. Its context size is not reported: 131072 is a conservative value.",
+      "max_output 32768 is a chosen value; the API accepts up to 1048576. Concurrent requests get HTTP 429 (rate limit).",
+      "Self-hosted NIM containers also serve /v1/messages and /v1/responses (docs.nvidia.com/nim/large-language-models/latest/reference/api-reference.html). Add one as a separate endpoint with its own URL to use claude_wrapper and codex_wrapper."
+    ]
+  }
+}
